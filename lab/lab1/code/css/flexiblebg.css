@@ -1,0 +1,114 @@
+body {
+	background-image:url('../images/bg_page_notes.gif');
+	font-family:Arial,sans-serif;
+}
+
+a {
+	text-decoration:none;
+	color:#a65c4c;
+}
+
+#container {
+	width:90%;
+	margin:0 auto;
+	background:#fff5ea;
+}
+
+#main {
+	width:93.75%;
+	margin:0 auto 5.888888% auto; /* 53px / 900px */
+	background: #fff url('../images/bg_main.png') repeat-y 62.888888% 0;
+}
+
+header {
+	background-color:#a67947;
+	padding:0 0 0 4%;
+}
+
+header h3#tagline {
+	float:right;
+	font-size:12px;
+	color:#fff;
+	font-style:italic;
+	margin:4% 4% 0 0;
+}
+
+nav {
+	background-color:#2d5668;
+	padding:1.111111% 0 1.111111% 4%;
+}
+
+nav ul {
+	display:inline;
+}
+
+nav ul li {
+	display:inline;
+}
+
+nav ul li a {
+	color:#fff;
+	text-decoration:none;
+	margin-right:0.9%;
+}
+
+#main #maincontent {
+	width:54.888888%;
+	float:left;
+	padding:4%; /* 36px / 900px */
+	
+}
+
+#main #maincontent h2 {
+	font-size:22px;
+	font-weight:bold;
+}
+
+#main #maincontent .performance {
+	margin:36px 0 0 0;
+	float:left;
+	width:46.558704%;
+}
+
+#main #maincontent .performance img {
+	margin:0 0.9% 10px 0;
+	max-width:100%;
+}
+
+#main #maincontent .performance h3 {
+	font-size:20px;
+}
+
+#main #maincontent .performance h3 a {
+	color:#2D5668;
+	text-decoration:none;
+}
+
+#main #maincontent img.pagephoto {
+	max-width:100%;
+	margin-bottom:4%;
+}
+
+#main #maincontent p {
+	margin:0 0 15px 0;
+}
+
+#main #sidebar {
+	width:28.777777%; /* 259px / 900 px */
+	float:right;
+	padding:4%; /* 36px / 900px */
+}
+
+#main #sidebar h3 {
+	font-style:italic;
+	font-size:20px;
+}
+
+#contactinfo {
+	clear: both;
+	background-color:#a67947;
+	padding:1.111111% 0 1.111111% 4%;
+}
+#contactinfo p {
+	color:#fff;
+}
