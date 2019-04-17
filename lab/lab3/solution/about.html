@@ -1,0 +1,80 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+    <script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+
+    <link rel="stylesheet" href="themes/mytheme.min.css" />
+    <link rel="stylesheet" href="themes/jquery.mobile.icons.min.css" />
+    <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile.structure-1.4.5.min.css" />
+
+    <title>About</title>
+</head>
+
+<body>
+
+    <div data-role="header">
+        <div data-role="navbar" data-iconpos="top">
+            <ul>
+                <li><a href="events.html" data-ajax="false" data-icon="home">Εκδηλώσεις</a></li>
+                <li><a href="form.html" data-ajax="false" data-icon="gear">Αιτήσεις</a></li>
+                <li><a href="about.html" data-ajax="false" data-icon="info" class="ui-btn-active ui-state-persist">Στοιχεία</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div data-role="collapsible" data-collapsed="false">
+        <h1>Μερικά Πράγματα για εμένα</h1>
+        <div class="ui-grid-a">
+            <div class="ui-block-a"><img src="images/male.png" /></div>
+            <div class="ui-block-b">
+
+                <p>Όνομα: Αλέξανδρος</p>
+                <p>Επίθετο: Γέροντας </p>
+
+                <p>Τηλέφωνο: 6979xxxxx</p>
+                <p>Διεύθυνση: Ηπείρου 23, Κυψέλη
+                    <br>Αθήνα, ΤΚ 12345</p>
+                <p>Email: icsd15029@aegean.gr</p>
+            </div>
+        </div>
+    </div>
+
+    <div data-role="collapsible" data-collapsed="false">
+        <h1>Που θα μας βρείτε</h1>
+        <div id="mapdiv" style="height:250px"></div>
+        <script src="http://www.openlayers.org/api/OpenLayers.js"></script>
+        <script>
+            var lat = 37.79715;
+            var lon = 26.70226;
+            var zoom = 12;
+
+            var fromProjection = new OpenLayers.Projection("EPSG:4326");
+            var toProjection = new OpenLayers.Projection("EPSG:900913");
+            var position = new OpenLayers.LonLat(lon, lat).transform(fromProjection, toProjection);
+
+            map = new OpenLayers.Map("mapdiv");
+            var mapnik = new OpenLayers.Layer.OSM();
+            map.addLayer(mapnik);
+
+            var markers = new OpenLayers.Layer.Markers("Markers");
+            map.addLayer(markers);
+            markers.addMarker(new OpenLayers.Marker(position));
+
+            map.setCenter(position, zoom);
+        </script>
+
+    </div>
+    </div>
+    </div>
+
+    <div data-role="footer">
+        <h4>Γέροντας Αλέξανδρος</h4>
+    </div>
+
+</body>
+
+</html>
