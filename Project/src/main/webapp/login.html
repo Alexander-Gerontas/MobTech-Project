@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="https://getbootstrap.com/favicon.ico">
+
+    <title>Login</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="https://getbootstrap.com/docs/4.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="signin.css" rel="stylesheet">
+
+    <script>        
+
+    function onload() 
+    {
+        document.getElementById("user_id").value = "";
+    }         
+
+    // Είσοδος των χρηστών στην εφαρμογή (Και πολιτών και δημοτικών υπαλλήλων)
+    function login() 
+    {          
+        var data = {};
+        data.username = document.getElementById("user_id").value;
+        data.password = document.getElementById("pass_id").value;
+                            
+        var xhr = new XMLHttpRequest();
+        var url = "http://localhost:8080/Project/webapi/user/" + data.username + '/' + data.password;                   
+        xhr.open("GET", url);
+                               
+        xhr.onreadystatechange = function () 
+        {
+            if (xhr.readyState == 4) 
+            {    
+                // Αν τα στοιχεία που έδωσε ο χρήστης είναι σωστά
+                // κρατάμε τα στοιχεία του και τον κάνουμε redirect στην λίστα αναφορών.
+                if (xhr.status == "200") 
+                {   
+                    sessionStorage.setItem('user', data.username);
+                    sessionStorage.setItem('user_type', xhr.responseText);
+                    window.location.href = "listReports.html";
+                } 
+
+                // Αν δεν είναι σωστά εμφανίζουμε μήνυμα αποτυχίας.
+                else 
+                {
+                    document.getElementById("pass_help").innerHTML = "Incorrect username or password";
+                }
+            }
+        }               
+        xhr.send();   
+    }      
+             
+    </script>   
+
+  </head>
+
+  <body onload="onload()" class="text-center">
+    <form class="form-signin">
+        <img class="mb-4" src="https://getbootstrap.com/docs/4.0/assets/brand/bootstrap-solid.svg" alt="" width="72" height="72">
+        
+        <h1 class="h3 mb-3 font-weight-normal">Please sign in</h1>
+        
+        <label for="inputUsername" class="sr-only">Username</label>
+        <input type="username" id="user_id" class="form-control" placeholder="Username" required autofocus>
+        
+        <label for="inputPassword" class="sr-only">Password</label>
+        <input type="password" id="pass_id" class="form-control" placeholder="Password" required>
+        <small id="pass_help" class="text-danger"></small>
+                
+        <button class="btn btn-lg btn-primary btn-block" id="logBtn_id" onclick="login()" type="button">Sign in</button><br>
+
+        <a href="register.html" class="btn btn-secondary btn-lg enabled" tabindex="-1" role="button" aria-disabled="true">Register</a>
+
+        <p class="mt-5 mb-3 text-muted">&copy; 2018-2019</p>
+
+    </form>
+  </body>
+</html>

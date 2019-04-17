@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="https://getbootstrap.com/favicon.ico">
+
+    <title>Report List</title>
+
+    <!-- Jquery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script> 
+
+    <!--  Bootstrap CSS -->
+    <link href="https://getbootstrap.com/docs/4.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!--  Bootstrap JS -->
+    <script src="https://getbootstrap.com/docs/4.0/dist/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+    <!-- Google Maps -->
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCxzreHeCydRsIBxRWq2F71YMHqLrBKYjQ&callback=initMap"></script>
+
+    <!-- Upvote Downvote CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+        
+    </script>
+    
+    <script> 
+        $(function()
+        {
+            // Φόρτωση του navbar1 αν ο χρήστης είναι πολίτης.
+            if (sessionStorage.getItem('user_type') == 'Civilian')
+            {
+                $("#includedContent").load("navbar1.html"); 
+            }
+
+            // Φόρτωση του navbar2 αν ο χρήστης είναι δημοτικός υπάλληλος.
+            else
+            {
+                $("#includedContent").load("navbar2.html"); 
+            }            
+        });
+    </script> 
+
+    <script>        
+
+        var myArr = "";
+        var map;
+        var locations = "";
+        var center = "";
+        var report_id = "";
+        var pos = "";
+       
+        function initMap() 
+        {             
+            map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 5,
+                center: center
+            });          
+
+             var marker = new google.maps.Marker({
+                position: center,
+                map: map
+            });   
+        }
+
+        // Ταξινόμηση του dropdown με βάση χωροχρονικά κριτήρια.
+        function sort()
+        {
+            selected_title = document.getElementById("criteria_id").options[criteria_id.selectedIndex].text;
+           
+            // Ταξινόμιση με βάση την απόσταση από Αθήνα. (Θεωρόντας ότι η έξυπνη πόλη είναι η Αθήνα)
+            if (selected_title == 'Location - Closest to Athens')
+            {
+                arr_temp = JSON.parse(JSON.stringify(myArr));
+                
+                // Κάνουμε clear τις αναφορές από το dropdown. 
+                for (i = 0; i < myArr.length; i++) 
+                {
+                    document.getElementById(i).remove();
+                }        
+                
+                for (i = 0; i < myArr.length; i++) 
+                {                      
+                    tmp_pos = 0;
+
+                    athens_lat = 37.983810;
+                    athens_lon = 23.727539;
+                    
+                    // Υπολογισμός της απόστασης μιας αναφοράς από το κέντρο της πόλης.
+                    temp1 = Math.pow(arr_temp[0].lat - athens_lat, 2);
+                    temp2 = Math.pow(arr_temp[0].lon - athens_lon, 2);
+
+                    center_dist = Math.sqrt(temp1 + temp2);
+                    
+                    // Εύρεση της αναφοράς που είναι κοντινότερη στο κέντρο.
+                    for (j = 0; j < myArr.length - i; j++)
+                    {                           
+                        temp1 = Math.pow(arr_temp[j].lat - athens_lat, 2);
+                        temp2 = Math.pow(arr_temp[j].lon - athens_lon, 2);
+
+                        dist = Math.sqrt(temp1 + temp2);                        
+
+                        // Αν η απόσταση μιας αναφοράς είναι μικρότερη από αυτήν που υπολογίστηκε προηγουμένως
+                        // κρατάμε το κελί της στον πίνακα και την απόσταση της από το κέντρο.
+                        if (dist < center_dist)
+                        {                        
+                            center_dist = dist; 
+                            tmp_pos = j;
+                        }                                       
+                    }
+                    
+                    // Τοποθέτηση της αναφοράς με την μικρότερη απόσταση στο dropdown.
+                    var newdiv = document.createElement('option');                        
+                              
+                    newdiv.id = i;                                          
+                    newdiv.value = i;    
+                    newdiv.innerHTML = arr_temp[tmp_pos].title;
+                    
+                    arr_temp.splice(tmp_pos, 1);
+                    document.getElementById("drop_id").appendChild(newdiv);                    
+                }  
+            }
+
+            // Ταξινόμιση με βάση την ημερομηνία όπου έγινε η αναφορά.
+            else if (selected_title == 'Date - Newest Reports first')
+            {                
+                arr_temp = JSON.parse(JSON.stringify(myArr));
+                
+                // Κάνουμε clear τις αναφορές από το dropdown. 
+                for (i = 0; i < myArr.length; i++) 
+                {
+                    document.getElementById(i).remove();
+                }
+                
+                for (i = 0; i < myArr.length; i++) 
+                {                   
+                    max_days = (1900 * 365) + 30;
+                    tmp_pos = 0;
+
+                    // Εύρεση της αναφοράς που έγινε πιο πρόσφατα.
+                    for (j = 0; j < myArr.length - i; j++)
+                    {                           
+                        report_day = arr_temp[j].time.split('-')[0];
+                        report_month = arr_temp[j].time.split('-')[1] * 30;
+                        report_year = arr_temp[j].time.split('-')[2] * 365; 
+                       
+                        // Μετατροπή της ημερομηνίας μιας αναφοράς σε μέρες.
+                        report_days = parseInt(report_day) + parseInt(report_month) + parseInt(report_year);
+                        
+                        // Αν μια αναφορά είναι πιο πρόσφατη από μια άλλη κρατάμε το κελί της στον πίνακα και την ημερομηνία της σε μέρες.
+                        if (report_days > max_days)
+                        {
+                            max_days = report_days;
+                            tmp_pos = j;
+                        }                                       
+                    }
+                    
+                    // Τοποθέτηση της πιο πρόσφατης αναφοράς στο dropdown.
+                    var newdiv = document.createElement('option');                        
+                              
+                    newdiv.id = i;                                          
+                    newdiv.value = i;    
+                    newdiv.innerHTML = arr_temp[tmp_pos].title;
+                    
+                    arr_temp.splice(tmp_pos, 1);
+                    document.getElementById("drop_id").appendChild(newdiv);                    
+                }  
+            }
+            loadReport();            
+        }
+
+        // Ενημέρωση του αριθμού των upvote / downvote μιας αναφοράς.
+        function updateVotes()
+        {
+            var xmlhttp = new XMLHttpRequest();
+            var url = "http://localhost:8080/Project/webapi/report/" + report_id;
+            xmlhttp.open("GET", url);
+            
+            xmlhttp.onreadystatechange = function() 
+            {                
+                if (this.readyState == 4 && this.status == 200) 
+                {
+                    voteArr = JSON.parse(this.responseText);                     
+                                        
+                    document.getElementById("up_id").innerHTML = 'Upvotes: ' + voteArr[0].upvotes;
+                    document.getElementById("down_id").innerHTML = 'Downvotes: ' + voteArr[0].downvotes;
+                }                
+            };
+            
+            xmlhttp.send();
+        }
+
+        // Aποστολή της υπερψήφισης / καταψήφισης μιας αναφοράς με PUT request.
+        function vote(clicked_id)
+        {            
+            var url = 'http://localhost:8080/Project/webapi/vote';
+            
+            var data = {};
+            data.username = sessionStorage.getItem('user');
+            data.report_id = report_id;
+            data.vote = (clicked_id == 'upButton_id')  ? 'u' : 'd';
+                        
+            var json = JSON.stringify(data);
+
+            var xhr = new XMLHttpRequest();
+            xhr.open("PUT", url, true);
+            xhr.setRequestHeader('Content-type','application/json; charset=utf-8');
+           
+            xhr.onload = function() 
+            {           
+                if (xhr.readyState == 4 && xhr.status == "200") updateVotes();
+            }
+            xhr.send(json);
+        }
+
+        function getUrlVars() 
+        {
+            var vars = {};
+            var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+                vars[key] = value;
+            });
+            return vars;
+        }
+
+        function onload()
+        {           
+            if (sessionStorage.getItem('user') == '')
+            {
+                window.location.href = "login.html";
+            }
+
+            // Εμφανίζουμε στοιχεία στη σελίδα αναλόγως τον χρήστη (Πολίτης / Δημοτικός Υπάλληλος)
+            if (sessionStorage.getItem('user_type') != 'Employee')
+            {
+                document.getElementById("upButton_id").style.visibility = 'visible';
+                document.getElementById("downButton_id").style.visibility = 'visible';
+                document.getElementById("up_id").style.visibility = 'visible';
+                document.getElementById("down_id").style.visibility = 'visible';
+            }
+            else 
+            {
+                document.getElementById("crit_id").style.visibility = 'visible';
+                document.getElementById("criteria_id").selectedIndex = 0;
+            }
+
+            var xmlhttp = new XMLHttpRequest();
+            var url = "http://localhost:8080/Project/webapi/report";
+                       
+            page_url = window.location.href + '';
+
+            var url_title = (page_url.includes('title')) ? getUrlVars()["title"].replace(/%20/g, " ") : '';          
+  
+            xmlhttp.onreadystatechange = function() 
+            {
+                if (this.readyState == 4 && this.status == 200) 
+                {
+                    myArr = JSON.parse(this.responseText);
+
+                    // Φόρτωση των αναφορών στο dropdown.
+                    for (i = 0; i < myArr.length; i++) 
+                    {
+                        var newdiv = document.createElement('option');                        
+
+                        newdiv.id = i;                                          
+                        newdiv.value = i;    
+                        newdiv.innerHTML = myArr[i].title;
+
+                        document.getElementById("drop_id").appendChild(newdiv);
+                    }                   
+                    
+                    // Αν έχει δωθεί τίτλος αναφοράς σαν όρισμα στο url φορτώνουμε εκείνη την αναφορά.
+                    if (url_title != null)
+                    {
+                        for (i = 0; i < myArr.length; i++) 
+                        {
+                            if (myArr[i].title == url_title) document.getElementById("drop_id").selectedIndex = i;
+                        }                                                
+                    }                    
+
+                    // Φορτώση επιλεγμένης αναφοράς.
+                    loadReport();
+                }
+            };
+
+            xmlhttp.open("GET", url);
+            xmlhttp.send();
+        }
+
+        // Φορτώση αναφοράς που έχει επιλέξει ο χρήστης από το dropdown.
+        function loadReport()
+        {           
+            selected_title = document.getElementById("drop_id").options[drop_id.selectedIndex].text;
+            
+            for (i = 0; i < myArr.length; i++) 
+            {
+                if (selected_title == myArr[i].title) 
+                {                    
+                    document.getElementById("text_id").placeholder = myArr[i].text;            
+
+                    center = {};
+                    center.lat = myArr[i].lat;
+                    center.lng = myArr[i].lon;
+
+                    report_id = myArr[i].report_id;
+                    pos = i;
+
+                    // Φόρτωση του αριθμού των upvote / downvote της αναφοράς.
+                    if (sessionStorage.getItem('user_type') == 'Civilian') updateVotes();
+                                       
+                    // Φόρτωση του χάρτη της αναφοράς.                    
+                    initMap();
+
+                    break;
+                }
+            }            
+        }
+
+    </script>
+</head>
+
+<body onload="onload()" class="text-center">
+    
+    <form class="container col-sm-10 align-middle">
+        <br><img class="mb-4" src="https://getbootstrap.com/docs/4.0/assets/brand/bootstrap-solid.svg" alt="" width="72" height="72">
+        
+        <div id="includedContent"></div><br>
+        
+        <h1 class="h3 mb-3 font-weight-normal">Report List</h1>
+
+        <div class="input-group mb-3" id="crit_id" style="visibility: hidden">
+            <div class="input-group-prepend">
+                <label class="input-group-text" for="inputGroupSelect01">Sort By</label>
+            </div>
+
+            <select class="custom-select" id="criteria_id" onchange="sort()">
+                <option value="0">Select sorting option</option>
+                <option value="1">Location - Closest to Athens</option>
+                <option value="2">Date - Newest Reports first</option>                
+            </select>
+        </div>
+
+        <div class="input-group mb-3">
+            <div class="input-group-prepend">
+                <label class="input-group-text" for="inputGroupSelect01">Report Title</label>
+            </div>
+            <select class="custom-select" id="drop_id" onchange="loadReport()"></select>
+        </div>    
+        
+        <div class="form-group shadow-textarea" style="min-width: 100%">                
+                <textarea class="form-control z-depth-1" id="text_id" rows="7" placeholder="" readonly></textarea>
+        </div>   
+        
+        <div id="map" class="z-depth-1-half map-container" style="height: 500px">
+                <iframe frameborder="0" style="border:0" allowfullscreen></iframe>
+        </div>
+        
+        <br>
+        <i onclick="vote(this.id)" style="visibility: hidden" id="upButton_id" class="fa fa-thumbs-up"></i> <p style="visibility: hidden" id='up_id'>Upvotes: </p>
+        <i onclick="vote(this.id)" style="visibility: hidden" id="downButton_id" class="fa fa-thumbs-down"></i> <p style="visibility: hidden" id='down_id'>Downvotes: </p>
+
+        <p class="mt-5 mb-3 text-muted">&copy; 2018-2019</p>
+    </form>
+</body>
+
+</html>

@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="https://getbootstrap.com/favicon.ico">
+
+    <title>Register</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="https://getbootstrap.com/docs/4.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="signin.css" rel="stylesheet">
+
+    <script>        
+
+        function onload() 
+        {
+            document.getElementById("user_id").value = ""
+            document.getElementById("regBtn_id").disabled = true;
+        }         
+
+        // Το register button ενεργοποιείται αν το username δεν υπάρχει ήδη από άλλο χρήστη,
+        // και αν ο κωδικός έχει μήκος τουλάχιστον 5 χαρακτήρες.
+        function checkRegButton()
+        {
+            if (document.getElementById("user_help").innerHTML == "")              
+                if (document.getElementById("pass_help").innerHTML == "")
+                    if (document.getElementById("user_id").value.length > 3)
+                        if (document.getElementById("pass_id").value.length > 4) 
+                            document.getElementById("regBtn_id").disabled = false;
+        }
+
+        // Ελέγχος αν το username είναι δεσμευμένο ή αν έχει μήκος τουλάχιστον 5 χαρακτήρες.
+        function checkUser() 
+        {
+            document.getElementById("user_help").innerHTML = "";            
+            document.getElementById("regBtn_id").disabled = true;
+
+            const Http = new XMLHttpRequest();
+            const url='http://localhost:8080/Project/webapi/user/' + document.getElementById("user_id").value;
+            
+            Http.open("GET", url);
+                        
+            setTimeout(function()
+            {
+           		Http.send();    
+            },1500);
+
+            Http.onreadystatechange=(e)=>
+            {          
+            	document.getElementById("user_help").innerHTML = "";
+            	            	            	            	
+                if (Http.status == 400) document.getElementById("user_help").innerHTML = "Username exists";
+                
+                else if (document.getElementById("user_id").value.length < 5)                	
+               	{
+                	document.getElementById("user_help").innerHTML = "You have entered less than 5 characters for username";
+               	}
+                
+                else document.getElementById("user_help").innerHTML = "";
+                
+                checkRegButton();
+            }
+        }
+
+        // Έλεγχος αν ο κωδικός έχει μήκος τουλάχιστον 5 χαρακτήρες.
+        function checkPassword() 
+        {     
+            document.getElementById("pass_help").innerHTML = "";
+            document.getElementById("regBtn_id").disabled = true;
+            
+            setTimeout(function()
+            {
+                if (document.getElementById("pass_id").value.length < 5)
+                {
+                    document.getElementById("pass_help").innerHTML = "You have entered less than 5 characters for password";
+                }
+                else document.getElementById("pass_help").innerHTML = "";
+                
+                checkRegButton();
+                
+            },1500);                        
+        }
+
+        // Εγγραφή του χρήστη στην πλατφόρμα.
+        function register() 
+        {          
+            var data = {};
+
+            data.username = document.getElementById("user_id").value;
+            data.password = document.getElementById("pass_id").value;
+
+            data.type = document.getElementById("drop_id").options[drop_id.selectedIndex].text;
+
+            var json = JSON.stringify(data);
+            
+            var xhr = new XMLHttpRequest();
+            var url = "http://localhost:8080/Project/webapi/user"
+                        
+            xhr.open("POST", url, true);
+
+            xhr.setRequestHeader('Content-type','application/json; charset=utf-8');
+                        
+            xhr.onreadystatechange = function () 
+            {
+                if (xhr.readyState == 4) 
+                {          
+                    // Αν το post request είναι επιτυχημένο κρατάμε τα στοιχεία του χρήστη και τον κάνουμε redirect στην λίστα αναφορών.
+                    if (xhr.status == "200") 
+                    {
+                        sessionStorage.setItem('user', data.username);     
+                        sessionStorage.setItem('user_type', data.type);                   
+                        window.location.href = "listReports.html";
+                    }                     
+                }
+
+            }
+
+            xhr.send(json);           
+        }      
+               
+        </script>    
+
+  </head>
+
+  <body onload="onload()" class="text-center">
+    <form class="form-signin">
+        <img class="mb-4" src="https://getbootstrap.com/docs/4.0/assets/brand/bootstrap-solid.svg" alt="" width="72" height="72">
+        <h1 class="h3 mb-3 font-weight-normal">Please Register</h1>
+        
+            <div class="form-group row">
+            <label for="inputUsername" class="sr-only">Username</label>
+            <input type="username" onkeyup="checkUser()" id="user_id" class="form-control" placeholder="Username" required autofocus>
+            <small id="user_help" class="text-danger"></small>
+                
+            <label for="inputPassword" class="sr-only">Password</label>
+            <input type="password" onkeyup="checkPassword()" id="pass_id" class="form-control" placeholder="Password" required>
+            <small id="pass_help" class="text-danger"></small>
+
+            <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <label class="input-group-text" for="inputGroupSelect01">User Type</label>
+                    </div>
+                    <select class="custom-select" id="drop_id">
+                        <option value="Civilian">Civilian</option>
+                        <option value="Employee">Employee</option> 
+                    </select>
+            </div>
+
+        </div>
+               
+        <button class="btn btn-lg btn-primary btn-block" id="regBtn_id" onclick="register()" type="button">Register</button>
+
+        <br>
+        <a href="login.html" class="btn btn-secondary btn-lg enabled" tabindex="-1" role="button" aria-disabled="false">Sign in</a>
+
+        <p class="mt-5 mb-3 text-muted">&copy; 2018-2019</p>
+
+    </form>
+  </body>
+</html>

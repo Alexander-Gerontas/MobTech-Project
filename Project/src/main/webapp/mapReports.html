@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="https://getbootstrap.com/favicon.ico">
+
+    <title>Reports on Map</title>
+
+    <!-- Jquery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script> 
+
+    <!--  Bootstrap CSS -->
+    <link href="https://getbootstrap.com/docs/4.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!--  Bootstrap JS -->
+    <script src="https://getbootstrap.com/docs/4.0/dist/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+    <!-- Google Maps -->
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCxzreHeCydRsIBxRWq2F71YMHqLrBKYjQ&callback=initMap"></script>
+
+    <script> 
+        $(function()
+        {
+            // Φόρτωση του navbar1 αν ο χρήστης είναι πολίτης.
+            if (sessionStorage.getItem('user_type') == 'Civilian')
+            {
+                $("#includedContent").load("navbar1.html"); 
+            }
+
+            // Φόρτωση του navbar2 αν ο χρήστης είναι δημοτικός υπάλληλος.
+            else
+            {
+                $("#includedContent").load("navbar2.html"); 
+            }            
+        });
+    </script>
+
+    <script>
+
+        var map;
+        var locations = "";
+
+        // Φόρτωση του χάρτη.
+        function initMap() 
+        {   
+        	if (sessionStorage.getItem('user') == '')
+            {
+                window.location.href = "login.html";
+            }
+            
+            var center = {lat: 39.5973732, lng: 22.6315342};   
+       
+            map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 5,
+                center: center
+            });
+           
+            getReports();
+        }
+
+        // Λήψη των αναφορών από την Βάση.
+        function getReports()
+        {            
+            const Http = new XMLHttpRequest();
+            const url = 'http://localhost:8080/Project/webapi/report';
+            
+            Http.open("GET", url);
+            Http.send();
+
+            Http.onreadystatechange = function () 
+            {
+                if (Http.readyState == 4) 
+                {          
+                    if (Http.status == "200") 
+                    {                                                
+                        str = Http.responseText;                                                             
+                        str = str.replace('[', '').replace(']', '').replace(/},/g, '}\n');
+                                                                        
+                        var strLines = str.split("\n");
+                       
+                        locations = [];
+                       
+                        // Κατασκευή του πίνακα locations ο οποίος θα έχει τις συντεταγμένες των αναφορών, τον τίτλο τους,
+                        // και ένα link το οποίο ο χρήστης θα μπορεί να το πατήσει και να δει ολόκληρη την αναφορά.
+                        for (var i in strLines) 
+                        {   
+                            var obj = JSON.parse(strLines[i]);
+                            locations.push([obj.title + '<br>' + '<a href=" ' + 'listReports.html' + '?title=' + obj.title + '">View Report</a>' , obj.lat, obj.lon]);
+                        }         
+                        
+                        drawMap();
+                    }                     
+                }
+            }                
+        }         
+
+        // Τοποθέτηση των marker πάνω στον χάρτη.
+        function drawMap()
+        {                       
+            var infowindow =  new google.maps.InfoWindow({});
+            var marker, count;
+
+            for (count = 0; count < locations.length; count++) {
+                marker = new google.maps.Marker({
+                    position: new google.maps.LatLng(locations[count][1], locations[count][2]),
+                map: map,
+                title: locations[count][0]
+            });
+            
+            google.maps.event.addListener(marker, 'click', (function (marker,
+            count) {
+                return function () {
+                    infowindow.setContent(locations[count][0]);
+                    infowindow.open(map, marker);
+                }
+                })(marker, count));
+            }
+        }
+                       
+        </script>
+</head>
+
+<body onload="initMap()" class="text-center">  
+    <form class="container col-sm-10 align-middle">
+        <br><img class="mb-4" src="https://getbootstrap.com/docs/4.0/assets/brand/bootstrap-solid.svg" alt="" width="72" height="72">
+        
+        <div id="includedContent"></div><br>
+        
+        <h1 class="h3 mb-3 font-weight-normal">Reports on Map</h1>
+
+        <div id="map" class="z-depth-1-half map-container" style="height: 500px">
+                <iframe frameborder="0" style="border:0" allowfullscreen></iframe>
+        </div>
+
+        <p class="mt-5 mb-3 text-muted">&copy; 2018-2019</p>
+    </form>
+</body>
+
+</html>

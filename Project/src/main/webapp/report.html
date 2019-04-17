@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="https://getbootstrap.com/favicon.ico">
+
+    <title>Report</title>
+
+    <!-- Jquery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script> 
+
+    <!--  Bootstrap CSS -->
+    <link href="https://getbootstrap.com/docs/4.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!--  Bootstrap JS -->
+    <script src="https://getbootstrap.com/docs/4.0/dist/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+    <script> 
+        $(function()
+        {   
+            // Φόρτωση του navbar1 αν ο χρήστης είναι πολίτης
+            if (sessionStorage.getItem('user_type') == 'Civilian')
+            {
+                $("#includedContent").load("navbar1.html"); 
+            }
+            
+            // Φόρτωση του navbar2 αν ο χρήστης είναι δημοτικός υπάλληλος
+            else
+            {
+                $("#includedContent").load("navbar2.html"); 
+            }            
+        });
+    </script> 
+
+    <script>        
+
+        function onload() 
+        {  
+            // Αν ο χρήστη δεν έχει κάνει login τον κάνουμε Redirect στην σελίδα εισόδου.
+            if (sessionStorage.getItem('user') == '')
+            {
+                window.location.href = "login.html";
+            }
+
+            // Απενεργοπούμε το κουμπί 'Send Report'.
+            document.getElementById('repBtn_id').disabled = true;
+
+            // Ζητάμε από τον χρήστη πρόσβαση στην τοποθεσία του. Όταν μας δώσει πρόσβαση ενεργοποείται το κουμπί 'Send Report'.
+            if (navigator.geolocation) 
+            {   
+                navigator.geolocation.getCurrentPosition(
+                    function(position)
+                    {                       
+                        document.getElementById('repBtn_id').disabled = false;
+                        lat = position.coords.latitude;
+                        lon = position.coords.longitude;
+                    }                                
+                );
+            } 
+        }         
+       
+        // Aποστολή της αναφοράς με POST request.
+        function report() 
+        {       
+            var data = {};
+
+            data.username = sessionStorage.getItem('user');
+            data.title = document.getElementById("title_id").value;                                           
+            data.text = document.getElementById("text_id").value;                        
+            data.type = document.getElementById("drop_id").options[drop_id.selectedIndex].text;
+            data.lat = lat;
+            data.lon = lon;
+
+            var d = new Date();            
+            var date = d.getDate() + '-' + (d.getMonth() + 1) + '-' + d.getFullYear();
+            data.time = date;
+                    
+            var json = JSON.stringify(data);
+                       
+            var xhr = new XMLHttpRequest();
+            var url = "http://localhost:8080/Project/webapi/report";
+                       
+            xhr.open("POST", url, true);
+
+            xhr.setRequestHeader('Content-type','application/json; charset=utf-8');
+                      
+            xhr.onreadystatechange = function() 
+            {
+                if (xhr.readyState == 4) 
+                {         
+                    // Εμφάνιση μηνύματος επιτυχίας/αποτυχίας στον χρήστη
+                    if (xhr.status == "200") 
+                    {   
+                        document.getElementById("report_success").innerHTML = "The report has been successfully sent";
+                    } 
+                    else
+                    {
+                        document.getElementById("report_fail").innerHTML = "Server error. Please try again later";                        
+                    }     
+
+                    setTimeout(function()
+                    {
+                        document.getElementById("report_success").innerHTML = '';
+                    }, 3000);   
+
+                    setTimeout(function()
+                    {
+                        document.getElementById("report_fail").innerHTML = '';
+                    }, 3000);                               
+                }
+            }
+            xhr.send(json);                    
+        }                   
+        </script>    
+
+  </head>
+
+  <body onload="onload()" class="text-center">
+       
+    <form class="container col-sm-10 align-middle">
+            
+        <br>
+        <img class="mb-4" src="https://getbootstrap.com/docs/4.0/assets/brand/bootstrap-solid.svg" alt="" width="72" height="72">
+        
+        <div id="includedContent"></div><br>
+              
+        <h1 class="h3 mb-3 font-weight-normal">Report</h1>
+        
+        <div class="form-group row" style="min-width: 100%">
+            
+            <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                    <label class="input-group-text" for="inputGroupSelect01">Report Type</label>
+                </div>
+
+                <select class="custom-select" id="drop_id">
+                    <option value="1">General</option>
+                    <option value="2">Road issues and lighting</option> 
+                    <option value="3">Environmental issues and cleanliness</option> 
+                    <option value="4">Operations</option> 
+                    <option value="5">Maintenance</option> 
+                </select>
+            </div>
+           
+            <div class="form-group col-lg-10 align-middle" style="min-width: 100%">
+                <label for="inputlg">Title</label>
+                <input class="form-control col-lg-30" id="title_id" type="text">
+            </div>
+
+            <div class="form-group shadow-textarea" style="min-width: 100%">
+                <label for="exampleFormControlTextarea6">Please write your report</label>
+                <textarea class="form-control z-depth-1" id="text_id" rows="5" placeholder="Write something here..."></textarea>
+            </div>          
+
+        </div>            
+        
+        <button class="btn btn-lg btn-primary btn-block" id="repBtn_id" onclick="report()" type="button">Send Report</button>
+        <small id="report_success" class="text-success"></small>    
+        <small id="report_fail" class="text-danger"></small>    
+        
+        <p class="mt-5 mb-3 text-muted">&copy; 2018-2019</p>
+    </form>   
+  </body>
+</html>
